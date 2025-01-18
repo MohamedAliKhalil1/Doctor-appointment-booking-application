@@ -4,6 +4,7 @@ import (
 	appointmentUC "github.com/doctorBooking/appointment/app"
 	appointmentH "github.com/doctorBooking/appointment/http"
 	appointmentRepo "github.com/doctorBooking/appointment/repository"
+	"github.com/doctorBooking/appointment_confirmation"
 	"github.com/doctorBooking/doctor_availability/app"
 	httpav "github.com/doctorBooking/doctor_availability/http"
 	timeSlotRepo "github.com/doctorBooking/doctor_availability/repository"
@@ -16,8 +17,10 @@ func main() {
 	timeSlotService := app.NewTimeSlotService(timeSlotRepository)
 	timeSlotHandler := httpav.NewTimeSlotHandler(timeSlotService)
 
+	notificationService := appointment_confirmation.NewAppointmentConfirmationServiceImpl()
+
 	appointmentRepository := appointmentRepo.NewAppointmentRepositoryImpl()
-	appointmentUseCase := appointmentUC.NewAppointmentReserveUseCase(appointmentRepository, timeSlotService)
+	appointmentUseCase := appointmentUC.NewAppointmentReserveUseCase(appointmentRepository, timeSlotService, notificationService)
 	appointmentHandler := appointmentH.NewAppointmentHandler(appointmentUseCase)
 
 	r := mux.NewRouter()

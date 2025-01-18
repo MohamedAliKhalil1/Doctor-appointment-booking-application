@@ -3,6 +3,7 @@ package app
 import (
 	"errors"
 	"github.com/doctorBooking/appointment/model"
+	"github.com/doctorBooking/appointment_confirmation"
 	"github.com/doctorBooking/doctor_availability/app"
 	"github.com/google/uuid"
 )
@@ -10,10 +11,15 @@ import (
 type AppointmentReserveUseCase struct {
 	appointmentRepository AppointmentRepository
 	timeSlotService       app.ItimeSlotService
+	notify                appointment_confirmation.AppointmentConfirmationService
 }
 
-func NewAppointmentReserveUseCase(repo AppointmentRepository, timeSlotService app.ItimeSlotService) *AppointmentReserveUseCase {
-	return &AppointmentReserveUseCase{appointmentRepository: repo, timeSlotService: timeSlotService}
+func NewAppointmentReserveUseCase(repo AppointmentRepository, timeSlotService app.ItimeSlotService, notify appointment_confirmation.AppointmentConfirmationService) *AppointmentReserveUseCase {
+	return &AppointmentReserveUseCase{
+		appointmentRepository: repo,
+		timeSlotService:       timeSlotService,
+		notify:                notify,
+	}
 }
 
 func (apptuc *AppointmentReserveUseCase) CreateAppointment(appt *model.Appointment) (*model.Appointment, error) {
@@ -25,10 +31,18 @@ func (apptuc *AppointmentReserveUseCase) CreateAppointment(appt *model.Appointme
 		appt.ID = uuid.New()
 	}
 
-	_, err := apptuc.timeSlotService.ReserveTimeSlot(appt.SlotID)
+	slot, err := apptuc.timeSlotService.ReserveTimeSlot(appt.SlotID)
 	if err != nil {
 		return nil, err
 	}
 
-	return apptuc.appointmentRepository.SaveAppointment(appt)
+	createdAppointment, err := apptuc.appointmentRepository.SaveAppointment(appt)
+	if err != nil {
+		return nil, err
+	}
+	err = apptuc.notify.SendConfirmation(createdAppointment.PatientName, slot.DoctorName, slot.Time)
+	if err != nil {
+		return nil, err
+	}
+	return createdAppointment, nil
 }

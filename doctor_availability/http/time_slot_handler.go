@@ -67,6 +67,10 @@ func (h *TimeSlotHandler) CreateTimeSlot(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(slot)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *TimeSlotHandler) ReserveTimeSlot(w http.ResponseWriter, r *http.Request) {

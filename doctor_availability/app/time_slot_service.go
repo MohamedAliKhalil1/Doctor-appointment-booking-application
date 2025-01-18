@@ -2,7 +2,6 @@ package app
 
 import (
 	"errors"
-	"fmt"
 	"github.com/doctorBooking/doctor_availability/model"
 	"github.com/google/uuid"
 )
@@ -58,7 +57,6 @@ func (ts *TimeSlotService) CreateTimeSlot(slot *model.TimeSlot) (*model.TimeSlot
 }
 
 func (ts *TimeSlotService) ReserveTimeSlot(slotId uuid.UUID) (*model.TimeSlot, error) {
-	fmt.Println(slotId)
 	if slotId == uuid.Nil {
 		return nil, errors.New("slot id must not be nil")
 	}
