@@ -16,17 +16,17 @@ func NewAppointmentRepositoryImpl() *AppointmentRepositoryImpl {
 	return &AppointmentRepositoryImpl{appointments: make(map[uuid.UUID]*model.Appointment), mutex: &sync.Mutex{}}
 }
 
-func (a *AppointmentRepositoryImpl) SaveAppointment(appt *model.Appointment) error {
+func (a *AppointmentRepositoryImpl) SaveAppointment(appt *model.Appointment) (*model.Appointment, error) {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 	if appt == nil {
-		return errors.New("appointment is nil")
+		return nil, errors.New("appointment is nil")
 	}
 
 	if _, ok := a.appointments[appt.ID]; ok {
-		return errors.New("appointment already exists")
+		return nil, errors.New("appointment already exists")
 	}
 
 	a.appointments[appt.ID] = appt
-	return nil
+	return appt, nil
 }
