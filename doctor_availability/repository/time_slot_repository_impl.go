@@ -9,14 +9,14 @@ import (
 )
 
 type TimeSlotRepositoryImpl struct {
-	timeSlots map[uuid.UUID]*model.TimeSlot
-	mutex     *sync.RWMutex
+	TimeSlots map[uuid.UUID]*model.TimeSlot
+	Mutex     *sync.RWMutex
 }
 
 func NewTimeSlotRepositoryImpl() *TimeSlotRepositoryImpl {
 	timeSlots := make(map[uuid.UUID]*model.TimeSlot)
 	mutex := &sync.RWMutex{}
-	return &TimeSlotRepositoryImpl{timeSlots: timeSlots, mutex: mutex}
+	return &TimeSlotRepositoryImpl{TimeSlots: timeSlots, Mutex: mutex}
 }
 
 func (repo *TimeSlotRepositoryImpl) CopyTimeSlote(timeSlot *model.TimeSlot) (*model.TimeSlot, error) {
@@ -34,11 +34,11 @@ func (repo *TimeSlotRepositoryImpl) CopyTimeSlote(timeSlot *model.TimeSlot) (*mo
 }
 
 func (repo *TimeSlotRepositoryImpl) ListTimeSlots() []*model.TimeSlot {
-	repo.mutex.RLock()
-	defer repo.mutex.RUnlock()
+	repo.Mutex.RLock()
+	defer repo.Mutex.RUnlock()
 
-	var timeSlots []*model.TimeSlot
-	for _, slot := range repo.timeSlots {
+	timeSlots := make([]*model.TimeSlot, 0, len(repo.TimeSlots))
+	for _, slot := range repo.TimeSlots {
 		slotCopy, err := repo.CopyTimeSlote(slot)
 		if err != nil {
 			log.Println(err)
@@ -49,8 +49,8 @@ func (repo *TimeSlotRepositoryImpl) ListTimeSlots() []*model.TimeSlot {
 }
 
 func (repo *TimeSlotRepositoryImpl) AddTimeSlot(timeSlot *model.TimeSlot) error {
-	repo.mutex.Lock()
-	defer repo.mutex.Unlock()
+	repo.Mutex.Lock()
+	defer repo.Mutex.Unlock()
 
 	if timeSlot == nil {
 		return fmt.Errorf("time slot is nil")
@@ -60,14 +60,14 @@ func (repo *TimeSlotRepositoryImpl) AddTimeSlot(timeSlot *model.TimeSlot) error 
 		timeSlot.ID = uuid.New()
 	}
 
-	if _, exists := repo.timeSlots[timeSlot.ID]; exists {
+	if _, exists := repo.TimeSlots[timeSlot.ID]; exists {
 		return fmt.Errorf("time slot with ID %s already exists", timeSlot.ID)
 	}
 
 	if timeSlot.Cost < 0 {
 		return fmt.Errorf("time slot cost is negative")
 	}
-	repo.timeSlots[timeSlot.ID] = timeSlot
+	repo.TimeSlots[timeSlot.ID] = timeSlot
 	return nil
 }
 
@@ -75,16 +75,25 @@ func (repo *TimeSlotRepositoryImpl) ReserveTimeSlot(slotId uuid.UUID) (
 	*model.TimeSlot,
 	error,
 ) {
-	repo.mutex.Lock()
-	defer repo.mutex.Unlock()
+	repo.Mutex.Lock()
+	defer repo.Mutex.Unlock()
 
-	if _, exists := repo.timeSlots[slotId]; !exists {
+	if _, exists := repo.TimeSlots[slotId]; !exists {
 		return nil, fmt.Errorf("time slot with ID %s does not exist", slotId)
 	}
-	slot := repo.timeSlots[slotId]
+	slot := repo.TimeSlots[slotId]
 	if slot.IsReserved {
 		return nil, fmt.Errorf("time slot with ID %s is already reserved", slotId)
 	}
 	slot.IsReserved = true
 	return repo.CopyTimeSlote(slot)
+}
+
+func (repo *TimeSlotRepositoryImpl) GetTimeSlot(slotId uuid.UUID) (*model.TimeSlot, error) {
+	repo.Mutex.RLock()
+	defer repo.Mutex.RUnlock()
+	if _, exists := repo.TimeSlots[slotId]; !exists {
+		return nil, fmt.Errorf("time slot with ID %s does not exist", slotId)
+	}
+	return repo.CopyTimeSlote(repo.TimeSlots[slotId])
 }

@@ -1,7 +1,8 @@
-package repository
+package tests
 
 import (
 	"github.com/doctorBooking/doctor_availability/model"
+	"github.com/doctorBooking/doctor_availability/repository"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"sync"
@@ -21,13 +22,13 @@ func createTimeSlot() *model.TimeSlot {
 }
 
 func TestNewTimeSlotRepositoryImpl(t *testing.T) {
-	got := NewTimeSlotRepositoryImpl()
-	want := &TimeSlotRepositoryImpl{
-		timeSlots: make(map[uuid.UUID]*model.TimeSlot),
+	got := repository.NewTimeSlotRepositoryImpl()
+	want := &repository.TimeSlotRepositoryImpl{
+		TimeSlots: make(map[uuid.UUID]*model.TimeSlot),
 	}
-	assert.Equal(t, want.timeSlots, got.timeSlots, "Expected timeSlots maps to be equal")
-	assert.Empty(t, got.timeSlots, "Expected timeSlots maps to be empty")
-	assert.IsTypef(t, &sync.RWMutex{}, got.mutex, "Expected the mutex to be of type *sync.RWMutex")
+	assert.Equal(t, want.TimeSlots, got.TimeSlots, "Expected timeSlots maps to be equal")
+	assert.Empty(t, got.TimeSlots, "Expected timeSlots maps to be empty")
+	assert.IsTypef(t, &sync.RWMutex{}, got.Mutex, "Expected the mutex to be of type *sync.RWMutex")
 }
 
 func TestTimeSlotRepositoryImpl_AddTimeSlot(t *testing.T) {
@@ -68,7 +69,7 @@ func TestTimeSlotRepositoryImpl_AddTimeSlot(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := NewTimeSlotRepositoryImpl()
+			repo := repository.NewTimeSlotRepositoryImpl()
 			err := repo.AddTimeSlot(tt.timeSlot)
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -80,7 +81,7 @@ func TestTimeSlotRepositoryImpl_AddTimeSlot(t *testing.T) {
 }
 
 func TestTimeSlotRepositoryImpl_ReserveTimeSlot(t *testing.T) {
-	repo := NewTimeSlotRepositoryImpl()
+	repo := repository.NewTimeSlotRepositoryImpl()
 	timeSlot := createTimeSlot()
 	_ = repo.AddTimeSlot(timeSlot)
 	tests := []struct {
@@ -125,7 +126,7 @@ func TestTimeSlotRepositoryImpl_ReserveTimeSlot(t *testing.T) {
 }
 
 func TestTimeSlotRepositoryImpl_ListTimeSlots(t *testing.T) {
-	repo := NewTimeSlotRepositoryImpl()
+	repo := repository.NewTimeSlotRepositoryImpl()
 	slotsNum := 10
 	for i := 0; i < slotsNum; i++ {
 		timeSlot := createTimeSlot()
