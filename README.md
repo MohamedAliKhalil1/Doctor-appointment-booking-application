@@ -1,7 +1,7 @@
 # Doctor-appointment-booking-application
 This project is implemented in modular Monolithic Arch
 ### 1. [Doctor Availability - Module](./doctor_availability/README.md)
-### 2. [Appointment Booking - Module](./appointment/README.md)
+### 2. [Appointment Booking - Module](./appointment)
 ### 3. [Appointment Confirmation - Module](./appointment_confirmation/README.md)
 
 ## Usage
